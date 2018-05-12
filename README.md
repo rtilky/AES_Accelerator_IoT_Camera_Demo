@@ -62,7 +62,6 @@ source ./make_minized_petalinux.tcl
 | set_IV of axilite_aes_cntl  | set_IV of axis_aes128      |
 
 ![AXI-DMA Schematic](/images/axi_dma_schematic.png)
-Format: ![Alt Text](url)
 
 8. Let auto-connection tool handle the rest of the connections.
 
@@ -73,27 +72,31 @@ Format: ![Alt Text](url)
 - Set the Memory Map Data Width and Stream Data Width to 128 bits.
 
 ![AXI-DMA Configuration](/images/axi_dma_tutorial.png)
-Format: ![Alt Text](url)
 
 10. Double click on the axi_data_fifo (do this step for both data fifos)
 
 - Set TDATA width to 16 bytes
+
+![AXI Data FIFO Configuration](/images/data_fifo_tutorial.png)
 
 11. Double clock on the processing_system (PS). Under Clock Configuration -> PL Fabric Clocks, set 
 
 - Set FCLK_CLK_0 to 71 MHz
 - FCLK_CLK_1 to 35 MHz 
 
+![PS Configuration](/images/ps_tutorial.png)
+
 12. Double click on bluetooth_uart
 
 - Set External CLK Freqency to 35 MHz
+
+![Bluetooth Configuration](/images/bluetooth_tutorial.png)
 
 13. On the toolbar, click Validate Block Design. (And pray for no errors :) )
 
 14. Click Regenerate Layout on the toolbar. You should have something similar to the following schematic. Save the block design.
 
 ![PL Schematic](/images/overview.png)
-Format: ![Alt Text](url)
 
 15. On top of the toolbar of block design window, click on the Address Editor tab. Record the Offset Address of
 
