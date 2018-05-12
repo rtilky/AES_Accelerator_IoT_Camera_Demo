@@ -1,239 +1,337 @@
 # AES Accelerator IoT Camera Demo
 
+Target Platform:
+
+- Hardware: MiniZed Developement Board
+- Workstation OS: Ubuntu 16.04 LTS
+- Essential Tools: PetaLinux Tools, Vivado Design Suite
+
 This project is built upon two other repos.
 
 1. App & Modules [aes128_driver](https://github.com/happyx94/aes128_driver)
 
 2. HDL [AXIS_AES128](https://github.com/happyx94/AXIS_AES128)
 
-
-# \*Under Construction...
+There are several essentail components with dependancy on one another. Please follow the following sections *in the listed order* to build the project.
 
 ---
-Create HDF and Generate Bitstream
----
 
-#### Prequsites:
-	a. Have Vivado 2017.4 and git installed on your machine 
-	b. Have the minized board definition file (BDF) in <your-vivado-install_path>/data/boards
-		(This can be downloaded from Avnet website. Tutorials are also available there.
+## Section I: Create HDF and Generate Bitstream
 
-1. Download the minized_petalinux project 
+### Prequsites
 
-	cd ~/Vivadoprojects
-	git clone git://github.com/Avnet/hdl.git
+- Have Vivado 2017.4 and git installed on your machine
+- Have the MiniZed board definition file (BDF) in <your-vivado-install_path>/data/boards (* This can be downloaded from Avnet website. Tutorials are also available there.
 
-2. Open Vivado. In the TCL prompt window, type
+### Build Instructions
+
+1. On the workstation PC, download the minized_petalinux project by issuing
+
+```shell
+cd ~/Vivadoprojects
+git clone git://github.com/Avnet/hdl.git
+```
+
+2. Launch Vivado. In the TCL prompt window, issue
 
 cd ~/Vivadoprojects/hdl/Scripts
 source ./make_minized_petalinux.tcl
 
 3. Open the project /hdl/Projects/minized_petalinux/
 
+4. Clone the [AXIS_AES128](https://github.com/happyx94/AXIS_AES128) repo. 
 
+5. In Vivado, open IP locations -> AXIS_AES128
 
+6. Add the followings to the block design.
 
-1. Clone the AXIS_AES128 project. 
+- axis_aes128
+- axilite_aes_cntl
+- AXI Direct Memory Access
+- Two instances of AXIS_DATA_FIFO
 
-2. Open IP locations -> AXIS_AES128
+7. Connect the signals accordingly. 
 
-3. Add the IPs, axis_aes128, axilite_aes_cntl, AXI Direct Memory Access, and two instances of AXIS_DATA_FIFO to the block design.
+| From                        | To                         |
+| --------------------------- |:--------------------------:|
+| M_AXIS_MM2S of the axi_dma  | S_AXIS of axis_data_fifo_0 |
+| M_AXIS of axis_data_fifo_0  | S00_AXIS of axis_aes128    |
+| M00_AXIS of axis_aes128     | S_AXIS of axis_data_fifo_1 |
+| M_AXIS of axis_data_fifo_1  | S_AXIS_S2MM of axi_dma     |
+| aes_key of axilite_aes_cntl | cipher_key of axis_aes128  |
+| set_IV of axilite_aes_cntl  | set_IV of axis_aes128      |
 
-4. Connect the signals accordingly. 
+![AXI-DMA Schematic](/images/axi_dma_schematic.png)
+Format: ![Alt Text](url)
 
-M_AXIS_MM2S of the axi_dma 	to 	S_AXIS of axis_data_fifo_0 
+8. Let auto-connection tool handle the rest of the connections.
 
-M_AXIS of axis_data_fifo_0 	to 	S00_AXIS of axis_aes128 
+9. Double click on axi_dma.
 
-M00_AXIS of axis_aes128 	to 	S_AXIS of axis_data_fifo_1
+- Disable Scatter Gather Engine
+- Set Width of Buffer Length Register to 20 bits.
+- Set the Memory Map Data Width and Stream Data Width to 128 bits.
 
-M_AXIS of axis_data_fifo_1	to	S_AXIS_S2MM of axi_dma
+![AXI-DMA Configuration](/images/axi_dma_tutorial.png)
+Format: ![Alt Text](url)
 
-aes_key of axilite_aes_cntl	to	cipher_key of axis_aes128
+10. Double click on the axi_data_fifo (do this step for both data fifos)
 
-set_IV of axilite_aes_cntl	to	set_IV of axis_aes128
+- Set TDATA width to 16 bytes
 
-5. Let auto-connection tool handle the rest of the connections. 
+11. Double clock on the processing_system (PS). Under Clock Configuration -> PL Fabric Clocks, set 
 
-6. Double click on axi_dma. 
+- Set FCLK_CLK_0 to 71 MHz
+- FCLK_CLK_1 to 35 MHz 
 
-Disable Scatter Gather Engine
+12. Double click on bluetooth_uart
 
-Set Width of Buffer Length Register to 20 bits.
+- Set External CLK Freqency to 35 MHz
 
-Set the Memory Map Data Width and Stream Data Width to 128 bits.
+13. On the toolbar, click Validate Block Design. (And pray for no errors :) )
 
-7. Double click on the axi_data_fifo (do this step for both data fifos)
+14. Click Regenerate Layout on the toolbar. You should have something similar to the following schematic. Save the block design.
 
-Set TDATA width to 16 bytes
+![PL Schematic](/images/overview.png)
+Format: ![Alt Text](url)
 
-8. Double clock on the processing_system (PS)
+15. On top of the toolbar of block design window, click on the Address Editor tab. Record the Offset Address of
 
-Clock Configuration -> PL Fabric Clocks -> 
+- processing_system7_0
+  - -> Data
+    - -> axi_dma_0
+    - -> axilite_aes_cntl_0
 
-Set FCLK_CLK_0 to 71 MHz 
+16. Go to Tools -> Settings -> Project Settings -> Implementation 
 
-Set FCLK_CLK_1 to 35 MHz 
+- Change the Strategy under Options to Performance_ExtraTimingOpt
 
-9. Double click on bluetooth_uart
+17. Run Synthesis. Run Implementation. Generate Bitstream.
 
-Set External CLK Freqency to 35 MHz
+18. File -> Export -> Export Hardware (check Include Bitstream)
 
-10. On the toolbar, click Validate Block Design. (And pray for no errors :) )
-
-11. Click Regenerate Layout on the toolbar. You should have something similar to the following schematic. Save the block design.
-
-12. On top of the toolbar of block design window, click on the Address Editor tab.
-
-Record the Offset Address of
-processing_system7_0 
--> Data
-  -> axi_dma_0
-  -> axilite_aes_cntl_0
-
-12. Go to Tools -> Settings -> Project Settings -> Implementation 
-
-Change the Strategy under Options to Performance_ExtraTimingOpt
-
-13. Run Synthesis. Run Implementation. Generate Bitstream.
-
-14. File -> Export -> Export Hardware (check Include Bitstream)
-
-
+    **\*Make sure you know where the HDF and BIT files are exported to**
 ---
-Create and Program the Binary to Flash
----
 
-#### Prequsites:
-	a. Running Ubuntu 16.04
-	b. Installed PetaLinux Tools 2017.3 (Link Follow the user guide to so do)
-	c. Have the minized_petalinux.hdf and minized_petalinux.bit files from the previous section.
+## Section II: Create Bootable and Program the Flash
 
+### Prerequisites
+
+- Running Ubuntu 16.04
+- Installed PetaLinux Tools 2017.3 (Link Follow the user guide to so do)
+- Have the minized_petalinux.hdf and minized_petalinux.bit files from the previous section.
+
+### Build Instructions
 
 1. Download minized_qspi.bsp from minized.org
 
 2. Source $(PETALINUX)/settings.sh to start PetaLinux enviornment if you haven't
 
-3. Create a folder for PetaLinux projects if you don't have one yet 
-(i.e. mkdir ~/projects). cd to the folder.
+3. Create a folder for PetaLinux projects if you don't have one yet
 
-4. Create a petalinux project by typing the following.
+```shell
+mkdir ~/projects
+cd ~/projects
+```
 
+4. Create a petalinux project by typing
+
+```shell
 petalinux-create -t project -n minized_qspi -s <path-to-the-minized_qspi.bsp>
+```
 
+5. Replace the following files with the ones you have exported in Section I.
 
-5. Replace minized_qspi/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw.hdf
-with the minized_petalinux_wrapper.hdf under your Vivado project directory (where you have exported the hardware to).
+- minized_qspi/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw.hdf
+- minized_qspi/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw/minized_petalinux_hw.bit
 
+6. Issue
 
-Replace minized_qspi/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw/minized_petalinux_hw.bit
-with the bitstream (*.bit) file under your Vivado project directory.
-
-6.
-
-cd to minized_qspi
-
+```shell
+cd ~/projects/minized_qspi
 petalinux-config --get-hw-description=./hardware/MINIZED/minized_petalinux.sdk/
+```
 
-The config screen should pop up. Just save and exit.
+      The configuration screen should pop up. Just simply save and exit.
 
+7. Build the project by issuing
+
+```shell
 petalinux-build
+```
 
-7. Copy boot_gen.sh, bootgen.bif, and zynq_fsbl.elf from the minized_qspi BSP zip file to ~/minized_qspi
+8. Copy the following three files from the minized_qspi BSP zip file to ~/projects/minized_qspi
+
+- boot_gen.sh
+- bootgen.bif
+- zynq_fsbl.elf
+
+9. Generate bootable binary. Under ~/projects/minized_qspi, issue
+
+```shell
 ./boot_gen.sh
-Rename the resulting boot.bin file to flash_fallback_7007S.bin
+```
 
-8. Start xsct in sudo mode by typing
+10. Start xsct in sudo mode by typing
 
+```shell
 sudo <your-vivado-install_path>/Xilinx/SDK/2017.4/bin/xsct
+```
 
-9. Connect minized to your computer
+11. Connect MiniZed to your workstation PC
 
-10. 
+12. In XSCT, issue
 
-exec program_flash -f BOOT.fsbl -bin zynq_fsbl.elf -flash_type qspi_single
+```shell
+exec program_flash -f BOOT.BIN -bin zynq_fsbl.elf -flash_type qspi_single
+```
 
+      You should expect a message saying program flash operation succeeded.
 
 ---
-Create PetaLinux Project
----
 
-Prequsites:
-	a. Running Ubuntu 16.04
-	b. Installed PetaLinux Tools 2017.3 (Link Follow the user guide to so do)
-	c. You have created the minized_qspi project and program the flash accordingly
-	d. A USB stick
+## Section III: Create Customized OS with PetaLinux
 
+### Prerequisites
+
+- Running Ubuntu 16.04
+- Installed PetaLinux Tools 2017.3 (Link Follow the user guide to so do)
+- You have created the minized_qspi project and program the flash accordingly
+- A USB stick
+
+### Build Instructions
 
 1. Download minized.bsp from minized.org
 
+```shell
 petalinux-create -t project -n minized -s <path-to-the-minized.bsp>
+```
 
 2. Source $(PETALINUX)/settings.sh to start PetaLinux enviornment if you haven't
 
-3. cd <your-project-folder>.
+3. Create a new petalinux project by typing the following.
 
-4. Create a new petalinux project by typing the following.
-
+```shell
+cd ~/projects
 petalinux-create -t project -n minized_qspi -s <path-to-the-minized_qspi.bsp>
+```
 
 5. Replace minized_qspi/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw.hdf
-with the minized_petalinux_wrapper.hdf under your Vivado project directory (where you have exported the hardware to).
+with the HDF you have exported in Section I.
 
-6. cd to minized
+6. Issue
 
+```shell
+cd ~/projects/minized
 petalinux-config --get-hw-description=./hardware/MINIZED/minized_petalinux.sdk/
+```
 
 Optional: When the settings screen pop up, change the rootfs type from initram to initrd if you think your image.ub will exceed 64MB.
 
-7. cd ./project-spec/meta-user/recipes-core/images
+7. Issue
 
-8. 
-	petalinux-config -c kernel
-	-- turn off DMA drivers.
-	-- turn on UVC
+```shell
+cd ./project-spec/meta-user/recipes-core/images
+```
 
-9. Follow the steps in 
+8. Replace or modifiy *petalinux-user-image.bbappend* with this [one](/petalinux_configs/petalinux-user-image.bbappend) in the repo.
 
-10. Copy ./images/linux/image.up to your USB stick. Copy the tool scripts as well as the wifi config files to the usb stick
+9. Configure the kernel. Two ways:
 
-11. Boot your minized. Interrupt the autobooting. In uboot shell, type
+    Simply replace ./project-spec/configs/config with petalinux_configs/config
 
-	run boot_qspi
+    *OR*
 
-12. Plug-in an extra power cable and the USB stick. Mount the device to /mnt/usb if it is not mounted automatically. 
+    Issue
+    ```shell
+    petalinux-config -c kernel
+    ```
+    In the pop up configuration screen,
+    - Exclude all Xilinx AXI-DMA drivers.
+    - Include the UVC driver
 
-13. 
-	cd /mnt/usb	
-	cp image.ub ../emmc/
-	mkdir ../emmc/demo
-	cp <all-demo-files-and-wifi-conf-file> ../emmc/demo
-	sync
-	reboot
+    Save and exit.
 
+10. Configure the rootfs. Also two ways:
+
+    Replace ./project-spec/configs/rootfs_config with petalinux_configs/rootfs_config
+
+    *OR*
+
+    Issue
+    ```shell
+    petalinux-config -c rootfs
+    ```
+    In the pop up configuration screen,
+    - Include all Gstreamer plugins
+    - Include the av encoder/decoder package
+
+    Save and exit.
+---
+
+## Section IV: Add Necessary Drivers, Packages, and Applications
+
+### Prerequisites
+
+- Have Section I to Section III done without any errors
+
+### Build Instructions
+
+1. Follow the steps in [aes128_driver](https://github.com/happyx94/aes128_driver) to include the necessary applications and modules.
+
+2. Copy ./images/linux/image.up to your USB stick. Also Copy the tool scripts as well as the wifi config files to the usb stick.
+
+3. Boot your minized. Interrupt the autobooting. In uboot shell, type
+
+```shell
+run boot_qspi
+```
+
+4. Plug-in an extra power cable and the USB stick. Mount the device to /mnt/usb if it is not mounted automatically.
+
+5. Copy the image, scripts, config files to the eMMC.
+
+```shell
+cd /mnt/usb
+cp image.ub ../emmc/
+cp <all-demo-files-and-wifi-conf-file> ../emmc
+sync
+reboot
+```
 
 ---
-Run the Demo
----
-1. Setup the receiver side on your computer.
-Record the ip address of your computer. Run
 
+## Section V: Setup the Client Side and Run the Demo
+
+1. Setup the receiver programs on your client side computer. Run the following to see your ip address
+
+```shell
 ifconf
+```
 
-to see you IP address.
+2. Download **ALL** source files for the AES128 program in [aes128_driver](https://github.com/happyx94/aes128_driver)/aes128 and /common
 
-2. Run ./receiver 5000 8192
+3. Compile the AES128 program by issuing
 
-3. Boot minized. On the shell, run
-	
-	wifi.sh
-	/mnt/emmc/demo/easy_demo.sh <your-computers-ip>
+```shell
+gcc -o aes128 aes128.c dma_driver.c sw_aes.c
+```
 
+4. Install Gstreamer and Netcat tools on your client PC if you haven't.
 
+5. Download the receiver side script /demo_scripts/receiver.sh to the same folder as your aes128 program
 
+6. In that folder. Run 
 
+```shell
+./receiver 5000 8192
+```
 
+7. Boot minized. Connect extra power cable and the USB camera. On the shell, run
 
-  
+```shell
+wifi.sh
+/mnt/emmc/demo/easy_demo.sh <your-computers-ip>
+```
 
-
+8. You should see the streaming video window on your client PC (hopefully).
