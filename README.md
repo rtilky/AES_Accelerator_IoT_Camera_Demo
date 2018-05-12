@@ -338,3 +338,12 @@ wifi.sh
 ```
 
 8. You should see the streaming video window on your client PC (hopefully).
+
+---
+
+## Section VI: Additional Server Programs and Android Client
+
+See the following repos:
+
+- [Server](https://github.com/edwardWang95/SeniorDesignServerClean)
+- [Android Client](https://github.com/edwardWang95/SeniorDesignAndroidClient)
