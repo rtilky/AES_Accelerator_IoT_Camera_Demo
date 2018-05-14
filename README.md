@@ -2,7 +2,7 @@
 
 Target Platform:
 
-- Hardware: MiniZed Developement Board
+- Hardware: MiniZed Development Board
 - Workstation OS: Ubuntu 16.04 LTS
 - Essential Tools: PetaLinux Tools, Vivado Design Suite
 
@@ -12,13 +12,13 @@ This project is built upon two other repos.
 
 2. HDL [AXIS_AES128](https://github.com/happyx94/AXIS_AES128)
 
-There are several essentail components with dependancy on one another. Please follow the following sections *in the listed order* to build the project.
+There are several essential components with dependency on one another. Please follow the following sections *in the listed order* to build the project.
 
 ---
 
 ## Section I: Create HDF and Generate Bitstream
 
-### Prequsites
+### Prerequisites
 
 - Have Vivado 2017.4 and git installed on your machine
 - Have the MiniZed board definition file (BDF) in <your-vivado-install_path>/data/boards (* This can be downloaded from Avnet website. Tutorials are also available there.
@@ -28,22 +28,25 @@ There are several essentail components with dependancy on one another. Please fo
 1. On the workstation PC, download the minized_petalinux project by issuing
 
 ```shell
+mkdir ~/Vivadoprojects
 cd ~/Vivadoprojects
 git clone git://github.com/Avnet/hdl.git
 ```
 
 2. Launch Vivado. In the TCL prompt window, issue
 
+```shell
 cd ~/Vivadoprojects/hdl/Scripts
 source ./make_minized_petalinux.tcl
+```
 
-3. Open the project /hdl/Projects/minized_petalinux/
+3. Open the project `/hdl/Projects/minized_petalinux/`
 
 4. Clone the [AXIS_AES128](https://github.com/happyx94/AXIS_AES128) repo. 
 
 5. In Vivado, open IP locations -> AXIS_AES128
 
-6. Add the followings to the block design.
+6. Add the following to the block design.
 
 - axis_aes128
 - axilite_aes_cntl
@@ -82,7 +85,7 @@ source ./make_minized_petalinux.tcl
 11. Double clock on the processing_system (PS). Under Clock Configuration -> PL Fabric Clocks, set 
 
 - Set FCLK_CLK_0 to 71 MHz
-- FCLK_CLK_1 to 35 MHz 
+- Set FCLK_CLK_1 to 35 MHz 
 
 ![PS Configuration](/images/ps_tutorial.png)
 
@@ -116,7 +119,7 @@ source ./make_minized_petalinux.tcl
     **\*Make sure you know where the HDF and BIT files are exported to**
 ---
 
-## Section II: Create Bootable and Program the Flash
+## Section II: Create Bootable Image and Program the Flash
 
 ### Prerequisites
 
@@ -155,7 +158,7 @@ cd ~/projects/minized_qspi
 petalinux-config --get-hw-description=./hardware/MINIZED/minized_petalinux.sdk/
 ```
 
-      The configuration screen should pop up. Just simply save and exit.
+The configuration screen should pop up. Just simply save and exit.
 
 7. Build the project by issuing
 
@@ -189,7 +192,7 @@ sudo <your-vivado-install_path>/Xilinx/SDK/2017.4/bin/xsct
 exec program_flash -f BOOT.BIN -bin zynq_fsbl.elf -flash_type qspi_single
 ```
 
-      You should expect a message saying program flash operation succeeded.
+    You should expect a message saying program flash operation succeeded.
 
 ---
 
