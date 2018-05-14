@@ -192,7 +192,7 @@ sudo <your-vivado-install_path>/Xilinx/SDK/2017.4/bin/xsct
 exec program_flash -f BOOT.BIN -bin zynq_fsbl.elf -flash_type qspi_single
 ```
 
-    You should expect a message saying program flash operation succeeded.
+You should expect a message saying program flash operation succeeded.
 
 ---
 
