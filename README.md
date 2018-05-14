@@ -2,7 +2,7 @@
 
 Target Platform:
 
-- Hardware: MiniZed Developement Board
+- Hardware: MiniZed Development Board
 - Workstation OS: Ubuntu 16.04 LTS
 - Essential Tools: PetaLinux Tools, Vivado Design Suite
 
@@ -12,13 +12,13 @@ This project is built upon two other repos.
 
 2. HDL [AXIS_AES128](https://github.com/happyx94/AXIS_AES128)
 
-There are several essentail components with dependancy on one another. Please follow the following sections *in the listed order* to build the project.
+There are several essential components with dependency on one another. Please follow the following sections *in the listed order* to build the project.
 
 ---
 
 ## Section I: Create HDF and Generate Bitstream
 
-### Prequsites
+### Prerequisites
 
 - Have Vivado 2017.4 and git installed on your machine
 - Have the MiniZed board definition file (BDF) in <your-vivado-install_path>/data/boards (* This can be downloaded from Avnet website. Tutorials are also available there.
@@ -28,22 +28,25 @@ There are several essentail components with dependancy on one another. Please fo
 1. On the workstation PC, download the minized_petalinux project by issuing
 
 ```shell
+mkdir ~/Vivadoprojects
 cd ~/Vivadoprojects
 git clone git://github.com/Avnet/hdl.git
 ```
 
 2. Launch Vivado. In the TCL prompt window, issue
 
+```shell
 cd ~/Vivadoprojects/hdl/Scripts
 source ./make_minized_petalinux.tcl
+```
 
-3. Open the project /hdl/Projects/minized_petalinux/
+3. Open the project `/hdl/Projects/minized_petalinux/`
 
 4. Clone the [AXIS_AES128](https://github.com/happyx94/AXIS_AES128) repo. 
 
 5. In Vivado, open IP locations -> AXIS_AES128
 
-6. Add the followings to the block design.
+6. Add the following to the block design.
 
 - axis_aes128
 - axilite_aes_cntl
@@ -82,7 +85,7 @@ source ./make_minized_petalinux.tcl
 11. Double clock on the processing_system (PS). Under Clock Configuration -> PL Fabric Clocks, set 
 
 - Set FCLK_CLK_0 to 71 MHz
-- FCLK_CLK_1 to 35 MHz 
+- Set FCLK_CLK_1 to 35 MHz 
 
 ![PS Configuration](/images/ps_tutorial.png)
 
@@ -116,7 +119,7 @@ source ./make_minized_petalinux.tcl
     **\*Make sure you know where the HDF and BIT files are exported to**
 ---
 
-## Section II: Create Bootable and Program the Flash
+## Section II: Create Bootable Image and Program the Flash
 
 ### Prerequisites
 
@@ -155,7 +158,7 @@ cd ~/projects/minized_qspi
 petalinux-config --get-hw-description=./hardware/MINIZED/minized_petalinux.sdk/
 ```
 
-      The configuration screen should pop up. Just simply save and exit.
+The configuration screen should pop up. Just simply save and exit.
 
 7. Build the project by issuing
 
@@ -189,7 +192,7 @@ sudo <your-vivado-install_path>/Xilinx/SDK/2017.4/bin/xsct
 exec program_flash -f BOOT.BIN -bin zynq_fsbl.elf -flash_type qspi_single
 ```
 
-      You should expect a message saying program flash operation succeeded.
+You should expect a message saying program flash operation succeeded.
 
 ---
 
@@ -199,7 +202,7 @@ exec program_flash -f BOOT.BIN -bin zynq_fsbl.elf -flash_type qspi_single
 
 - Running Ubuntu 16.04
 - Installed PetaLinux Tools 2017.3 (Link Follow the user guide to so do)
-- You have created the minized_qspi project and program the flash accordingly
+- You have created the minized_qspi project and programmed the flash accordingly
 - A USB stick
 
 ### Build Instructions
@@ -210,7 +213,7 @@ exec program_flash -f BOOT.BIN -bin zynq_fsbl.elf -flash_type qspi_single
 petalinux-create -t project -n minized -s <path-to-the-minized.bsp>
 ```
 
-2. Source $(PETALINUX)/settings.sh to start PetaLinux enviornment if you haven't
+2. Source $(PETALINUX)/settings.sh to start PetaLinux environment if you haven't
 
 3. Create a new petalinux project by typing the following.
 
@@ -237,7 +240,7 @@ Optional: When the settings screen pop up, change the rootfs type from initram t
 cd ./project-spec/meta-user/recipes-core/images
 ```
 
-8. Replace or modifiy *petalinux-user-image.bbappend* with this [one](/petalinux_configs/petalinux-user-image.bbappend) in the repo.
+8. Replace or modifiy `petalinux-user-image.bbappend` with this [one](/petalinux_configs/petalinux-user-image.bbappend) in the repo.
 
 9. Configure the kernel. Two ways:
 
@@ -282,7 +285,7 @@ cd ./project-spec/meta-user/recipes-core/images
 
 1. Follow the steps in [aes128_driver](https://github.com/happyx94/aes128_driver) to include the necessary applications and modules.
 
-2. Copy ./images/linux/image.up to your USB stick. Also Copy the tool scripts as well as the wifi config files to the usb stick.
+2. Copy `./images/linux/image.up` to your USB stick. Also copy the tool scripts as well as the wifi config files to the usb stick.
 
 3. Boot your minized. Interrupt the autobooting. In uboot shell, type
 
@@ -290,7 +293,7 @@ cd ./project-spec/meta-user/recipes-core/images
 run boot_qspi
 ```
 
-4. Plug-in an extra power cable and the USB stick. Mount the device to /mnt/usb if it is not mounted automatically.
+4. Plug-in an extra power cable and the USB stick. Mount the device to `/mnt/usb` if it is not mounted automatically.
 
 5. Copy the image, scripts, config files to the eMMC.
 
@@ -330,7 +333,7 @@ gcc -o aes128 aes128.c dma_driver.c sw_aes.c
 ./receiver 5000 8192
 ```
 
-7. Boot minized. Connect extra power cable and the USB camera. On the shell, run
+7. Boot minized. Connect an extra power cable and the USB camera. On the shell, run
 
 ```shell
 wifi.sh
