@@ -42,9 +42,9 @@ source ./make_minized_petalinux.tcl
 
 3. Open the project `/hdl/Projects/minized_petalinux/`
 
-4. Clone the [AXIS_AES128](https://github.com/happyx94/AXIS_AES128) repo. 
+4. Clone the [AXIS_AES128](https://github.com/happyx94/AXIS_AES128) repo to wherever you want on your workstation PC. 
 
-5. In Vivado, open IP locations -> AXIS_AES128
+5. In Vivado, click *Open Block Design*. In the *IP Catalog* window, right click and select *Add Repository*. Select the AXIS_AES128 repo you just cloned.
 
 6. Add the following to the block design.
 
@@ -85,36 +85,36 @@ source ./make_minized_petalinux.tcl
 11. Double clock on the processing_system (PS). Under Clock Configuration -> PL Fabric Clocks, set 
 
 - Set FCLK_CLK_0 to 71 MHz
-- Set FCLK_CLK_1 to 35 MHz 
+- Set FCLK_CLK_1 to 34.782608 MHz
 
 ![PS Configuration](/images/ps_tutorial.png)
 
 12. Double click on bluetooth_uart
 
-- Set External CLK Freqency to 35 MHz
+- Set External CLK Freqency to 34.782608 MHz
 
 ![Bluetooth Configuration](/images/bluetooth_tutorial.png)
 
-13. On the toolbar, click Validate Block Design. (And pray for no errors :) )
+13. On the toolbar, click *Validate Block Design*. (And pray for no errors :) )
 
-14. Click Regenerate Layout on the toolbar. You should have something similar to the following schematic. Save the block design.
+14. Click *Regenerate Layout* on the toolbar. You should have something similar to the following schematic. Save the block design.
 
 ![PL Schematic](/images/overview.png)
 
-15. On top of the toolbar of block design window, click on the Address Editor tab. Record the Offset Address of
+15. On top of the toolbar of block design window, click on the *Address Editor* tab. Record the Offset Address of
 
 - processing_system7_0
   - -> Data
     - -> axi_dma_0
     - -> axilite_aes_cntl_0
 
-16. Go to Tools -> Settings -> Project Settings -> Implementation 
+16. Go to Tools -> Settings -> Project Settings -> Implementation
 
 - Change the Strategy under Options to Performance_ExtraTimingOpt
 
 17. Run Synthesis. Run Implementation. Generate Bitstream.
 
-18. File -> Export -> Export Hardware (check Include Bitstream)
+18. File -> Export -> Export Hardware (check Include Bitstream). A small window will popup and you can specify the export location or leave it as default.
 
     **\*Make sure you know where the HDF and BIT files are exported to**
 ---
@@ -129,7 +129,7 @@ source ./make_minized_petalinux.tcl
 
 ### Build Instructions
 
-1. Download minized_qspi.bsp from minized.org
+1. Download minized_qspi.bsp 2017.2 from minized.org (under MiniZed->Tutorial).
 
 2. Source $(PETALINUX)/settings.sh to start PetaLinux enviornment if you haven't
 
@@ -143,7 +143,7 @@ cd ~/projects
 4. Create a petalinux project by typing
 
 ```shell
-petalinux-create -t project -n minized_qspi -s <path-to-the-minized_qspi.bsp>
+petalinux-create -t project -n minized_qspi -s <path-to-minized_qspi.bsp>
 ```
 
 5. Replace the following files with the ones you have exported in Section I.
@@ -166,11 +166,12 @@ The configuration screen should pop up. Just simply save and exit.
 petalinux-build
 ```
 
-8. Copy the following three files from the minized_qspi BSP zip file to ~/projects/minized_qspi
+8. Copy the following three files from minized_qspi.zip file to ~/projects/minized_qspi
 
 - boot_gen.sh
 - bootgen.bif
-- zynq_fsbl.elf
+
+    Also copy `./image/linux/zynq_fsbl.elf` to the same directory. If it is not there, download the python server tutorial on minized.org and just use the `zynq_fsbl.elf` in the zip file.
 
 9. Generate bootable binary. Under ~/projects/minized_qspi, issue
 
@@ -207,7 +208,7 @@ You should expect a message saying program flash operation succeeded.
 
 ### Build Instructions
 
-1. Download minized.bsp from minized.org
+1. Download minized.bsp 2017.2 from minized.org (under MiniZed->Tutorial).
 
 ```shell
 petalinux-create -t project -n minized -s <path-to-the-minized.bsp>
@@ -215,17 +216,20 @@ petalinux-create -t project -n minized -s <path-to-the-minized.bsp>
 
 2. Source $(PETALINUX)/settings.sh to start PetaLinux environment if you haven't
 
+```shell
+source $(PETALINUX)/settings.sh
+```
+
 3. Create a new petalinux project by typing the following.
 
 ```shell
 cd ~/projects
-petalinux-create -t project -n minized_qspi -s <path-to-the-minized_qspi.bsp>
+petalinux-create -t project -n minized_qspi -s <path-to-the-minized.bsp>
 ```
 
-5. Replace minized_qspi/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw.hdf
-with the HDF you have exported in Section I.
+4. Replace `minized/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw.hdf` with the HDF you have exported in Section I.
 
-6. Issue
+5. Issue
 
 ```shell
 cd ~/projects/minized
@@ -234,17 +238,17 @@ petalinux-config --get-hw-description=./hardware/MINIZED/minized_petalinux.sdk/
 
 Optional: When the settings screen pop up, change the rootfs type from initram to initrd if you think your image.ub will exceed 64MB.
 
-7. Issue
+6. Issue
 
 ```shell
 cd ./project-spec/meta-user/recipes-core/images
 ```
 
-8. Replace or modifiy `petalinux-user-image.bbappend` with this [one](/petalinux_configs/petalinux-user-image.bbappend) in the repo.
+7. Replace or modifiy `petalinux-user-image.bbappend` with [/petalinux_configs/petalinux-user-image.bbappend](/petalinux_configs/petalinux-user-image.bbappend).
 
-9. Configure the kernel. Two ways:
+8. Configure the kernel. Two ways:
 
-    Simply replace ./project-spec/configs/config with petalinux_configs/config
+    Simply replace `./project-spec/configs/config with petalinux_configs/config` with [/petalinux_configs/configs](/petalinux_configs/configs)
 
     *OR*
 
@@ -253,14 +257,14 @@ cd ./project-spec/meta-user/recipes-core/images
     petalinux-config -c kernel
     ```
     In the pop up configuration screen,
-    - Exclude all Xilinx AXI-DMA drivers.
+    - **EXCLUDE** all Xilinx AXI-DMA drivers.
     - Include the UVC driver
 
     Save and exit.
 
-10. Configure the rootfs. Also two ways:
+9. Configure the rootfs. Also two ways:
 
-    Replace ./project-spec/configs/rootfs_config with petalinux_configs/rootfs_config
+    Replace `./project-spec/configs/rootfs_config` with [/petalinux_configs/rootfs_config](/petalinux_configs/rootfs_config)
 
     *OR*
 
@@ -279,7 +283,7 @@ cd ./project-spec/meta-user/recipes-core/images
 
 ### Prerequisites
 
-- Have Section I to Section III done without any errors
+- Have Section I, II, and III done without any errors
 
 ### Build Instructions
 
@@ -295,7 +299,7 @@ run boot_qspi
 
 4. Plug-in an extra power cable and the USB stick. Mount the device to `/mnt/usb` if it is not mounted automatically.
 
-5. Copy the image, scripts, config files to the eMMC.
+5. Copy the image, [scripts](/demo_scripts), [config files](/wifi_conf) to the eMMC.
 
 ```shell
 cd /mnt/usb
@@ -317,30 +321,37 @@ ifconf
 
 2. Download **ALL** source files for the AES128 program in [aes128_driver](https://github.com/happyx94/aes128_driver)/aes128 and /common
 
-3. Compile the AES128 program by issuing
+3. Compile the AES128 program on your client PC by issuing
 
 ```shell
-gcc -o aes128 aes128.c dma_driver.c sw_aes.c
+cc -o aes128 aes128.c dma_driver.c sw_aes.c
 ```
 
 4. Install Gstreamer and Netcat tools on your client PC if you haven't.
 
-5. Download the receiver side script /demo_scripts/receiver.sh to the same folder as your aes128 program
+5. Download the receiver side script /demo_scripts/receiver.sh to the same folder as your aes128 program. Make sure you have the same *key* file in the directory.
 
-6. In that folder. Run 
+6. Boot minized. Connect an extra power cable and the USB camera. Connect MiniZed to the Wi-Fi by issuing
+
+```shell
+wifi.sh
+```
+
+7. Make sure the client PC and the MiniZed are in the same network and there is no firewall blocking the connections between them (e.g. you get a response on one if you `ping` the other).
+
+8. On the **Client PC**, in the directory where you put the client scripts, issue
 
 ```shell
 ./receiver 5000 8192
 ```
 
-7. Boot minized. Connect an extra power cable and the USB camera. On the shell, run
+9. On the **MiniZed board**, run
 
 ```shell
-wifi.sh
-/mnt/emmc/demo/easy_demo.sh <your-computers-ip>
+/mnt/emmc/easy_demo.sh <your-computers-ip>
 ```
 
-8. You should see the streaming video window on your client PC (hopefully).
+10. You should see the video streaming on the client PC now (hopefully).
 
 ---
 
