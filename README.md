@@ -21,7 +21,7 @@ There are several essential components with dependency on one another. Please fo
 ### Prerequisites
 
 - Have Vivado 2017.4 and git installed on your machine
-- Have the MiniZed board definition file (BDF) in <your-vivado-install_path>/data/boards (* This can be downloaded from Avnet website. Tutorials are also available there.
+- Have the MiniZed board definition file (BDF) in <your-vivado-install_path>/data/boards/board_files (* This can be downloaded from Avnet website. Tutorials are also available there.
 
 ### Build Instructions
 
@@ -40,11 +40,11 @@ cd ~/Vivadoprojects/hdl/Scripts
 source ./make_minized_petalinux.tcl
 ```
 
-3. Open the project `/hdl/Projects/minized_petalinux/`
+3. Open the project `/hdl/Projects/minized_petalinux/MINIZED/minizedpetalinux.xpr`
 
-4. Clone the [AXIS_AES128](https://github.com/happyx94/AXIS_AES128) repo to wherever you want on your workstation PC. 
+4. Clone the [AXIS_AES128](https://github.com/happyx94/AXIS_AES128) repo to wherever you want on your workstation PC.
 
-5. In Vivado, click *Open Block Design*. In the *IP Catalog* window, right click and select *Add Repository*. Select the AXIS_AES128 repo you just cloned.
+5. In Vivado, click *Open Block Design*. In the *IP Catalog* window, right click on User Repository and select *Add Repository*. Select the AXIS_AES128 repo you just cloned.
 
 6. Add the following to the block design.
 
@@ -52,8 +52,9 @@ source ./make_minized_petalinux.tcl
 - axilite_aes_cntl
 - AXI Direct Memory Access
 - Two instances of AXIS_DATA_FIFO
+- AXI SmartConnect
 
-7. Connect the signals accordingly. 
+7. Connect the signals accordingly.
 
 | From                        | To                         |
 | --------------------------- |:--------------------------:|
@@ -66,55 +67,71 @@ source ./make_minized_petalinux.tcl
 
 ![AXI-DMA Schematic](/images/axi_dma_schematic.png)
 
-8. Let auto-connection tool handle the rest of the connections.
+8. Double Click on the Zynq Processing System.  In the page navigator, click PS-PL Configuration.  Expand the section for HP Slave AXI Interface, and select the checkbox for S AXI HP0 interface.
 
-9. Double click on axi_dma.
+9. Let auto-connection tool handle the rest of the connections (Run twice).
+
+10. Double click on the AXI Interconnect.  Increase the number of slave devices from 1 to 2.  Connect S01_ACLK to one of the other ACLK signals that are input to the AXI Interconnect.  Do the same for S01_ARESETN.
+
+11. Double click on the Concat IP.  Increase the Number of Ports from 2 to 4.  Make the following connections:
+
+| From                        | To                         |
+| --------------------------- |:--------------------------:|
+| In2[0:0] of Concat          | mm2s_introut of AXI DMA    |
+| In3[0:0] of Concat          | s2mm_introut of AXI DMA    |
+
+
+
+12. Double click on axi_dma.
 
 - Disable Scatter Gather Engine
 - Set Width of Buffer Length Register to 20 bits.
 - Set the Memory Map Data Width and Stream Data Width to 128 bits.
+- Make the Memory Map Data Width field be Manual, and change to 128
 
 ![AXI-DMA Configuration](/images/axi_dma_tutorial.png)
 
-10. Double click on the axi_data_fifo (do this step for both data fifos)
+13. Double click on the axi_data_fifo (do this step for both data fifos)
 
-- Set TDATA width to 16 bytes
+- Set TDATA width to 16 bytes.  You may need to Change the entry mode from Auto to Manual
+- Enable TSTRB
+- Enable TLAST
 
 ![AXI Data FIFO Configuration](/images/data_fifo_tutorial.png)
 
-11. Double clock on the processing_system (PS). Under Clock Configuration -> PL Fabric Clocks, set 
+14. Double clock on the processing_system (PS). Under Clock Configuration -> PL Fabric Clocks, set
 
 - Set FCLK_CLK_0 to 71 MHz
-- Set FCLK_CLK_1 to 34.782608 MHz
+- Set FCLK_CLK_1 to 35 MHz
 
 ![PS Configuration](/images/ps_tutorial.png)
 
-12. Double click on bluetooth_uart
+15. Double click on bluetooth_uart
 
 - Set External CLK Freqency to 34.782608 MHz
 
 ![Bluetooth Configuration](/images/bluetooth_tutorial.png)
 
-13. On the toolbar, click *Validate Block Design*. (And pray for no errors :) )
+16. On the toolbar, click *Validate Block Design*. (And pray for no errors :) )
 
-14. Click *Regenerate Layout* on the toolbar. You should have something similar to the following schematic. Save the block design.
+17. Click *Regenerate Layout* on the toolbar. You should have something similar to the following schematic. Save the block design.
 
 ![PL Schematic](/images/overview.png)
 
-15. On top of the toolbar of block design window, click on the *Address Editor* tab. Record the Offset Address of
+18. On top of the toolbar of block design window, click on the *Address Editor* tab. Record the Offset Address of
 
 - processing_system7_0
   - -> Data
     - -> axi_dma_0
     - -> axilite_aes_cntl_0
 
-16. Go to Tools -> Settings -> Project Settings -> Implementation
+19. Go to Tools -> Settings -> Project Settings -> Implementation
 
 - Change the Strategy under Options to Performance_ExtraTimingOpt
 
-17. Run Synthesis. Run Implementation. Generate Bitstream.
+20. Run Synthesis. Run Implementation. Generate Bitstream.
 
-18. File -> Export -> Export Hardware (check Include Bitstream). A small window will popup and you can specify the export location or leave it as default.
+21. File -> Export -> Export Hardware (check Include Bitstream). A small window will popup and you can specify the export location to a location you know.  Also export the Bitstream separately by clicking File -> Export -> Export Bitstream File.  Give your file a name.
 
     **\*Make sure you know where the HDF and BIT files are exported to**
 ---
@@ -124,76 +141,91 @@ source ./make_minized_petalinux.tcl
 ### Prerequisites
 
 - Running Ubuntu 16.04
-- Installed PetaLinux Tools 2017.3 (Link Follow the user guide to so do)
+- Installed PetaLinux Tools 2017.2 (Link Follow the user guide to so do)
 - Have the minized_petalinux.hdf and minized_petalinux.bit files from the previous section.
 
 ### Build Instructions
 
 1. Download minized_qspi.bsp 2017.2 from minized.org (under MiniZed->Tutorial).
 
-2. Source $(PETALINUX)/settings.sh to start PetaLinux enviornment if you haven't
+2.  Add the PETALINUX system variable.
+```shell
+sudo vim /etc/environment
+```
+Append `PETALINUX="<path to PetaLinux Install Directory>"` to the file, if needed.  It may be necessary to restart your system.  Test the environment variable with `echo ${PETALINUX}`.  If the command is not found, or is not what you assigned it to be, restart your PC and try again.
 
-3. Create a folder for PetaLinux projects if you don't have one yet
+3. Run `source ${PETALINUX}/settings.sh` to start PetaLinux enviornment if you haven't
+
+4. Create a folder for PetaLinux projects if you don't have one yet
 
 ```shell
 mkdir ~/projects
 cd ~/projects
 ```
 
-4. Create a petalinux project by typing
+5. Create a petalinux project by typing
 
 ```shell
 petalinux-create -t project -n minized_qspi -s <path-to-minized_qspi.bsp>
 ```
 
-5. Replace the following files with the ones you have exported in Section I.
+6. Replace the following files with the ones you have exported in Section I, and rename accordingly if needed.
 
 - minized_qspi/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw.hdf
-- minized_qspi/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw/minized_petalinux_hw.bit
+- minized_qspi/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw/minized_petalinux_wrapper.bit
 
-6. Issue
+7. Issue
 
 ```shell
 cd ~/projects/minized_qspi
 petalinux-config --get-hw-description=./hardware/MINIZED/minized_petalinux.sdk/
 ```
 
+If you get an error message similar to `ERROR: Failed to Kconfig project` or `ERROR: Failed to generate System hardware Kconfig file`, you must delete a file that is currently locked.  This can be done by executing
+```shell
+rm -f ~/.xsctcmdhistory
+```
+After deleting this file, try running the `petalinux-config` command once more.
+
 The configuration screen should pop up. Just simply save and exit.
 
-7. Build the project by issuing
+8. Build the project by issuing
 
 ```shell
 petalinux-build
 ```
 
-8. Copy the following three files from minized_qspi.zip file to ~/projects/minized_qspi
+9. Copy the following three files from minized_qspi.zip file to ~/projects/minized_qspi
 
 - boot_gen.sh
 - bootgen.bif
 
     Also copy `./image/linux/zynq_fsbl.elf` to the same directory. If it is not there, download the python server tutorial on minized.org and just use the `zynq_fsbl.elf` in the zip file.
 
-9. Generate bootable binary. Under ~/projects/minized_qspi, issue
+10. Modify the path in line 1 of boot_gen.sh to point to the appropriate path relative to the Xilinx Installation Path.
+
+10. Generate bootable binary. Under ~/projects/minized_qspi, issue
 
 ```shell
+chmod +x boot_gen.sh
 ./boot_gen.sh
 ```
 
-10. Start xsct in sudo mode by typing
+11. Start xsct in sudo mode by typing
 
 ```shell
 sudo <your-vivado-install_path>/Xilinx/SDK/2017.4/bin/xsct
 ```
 
-11. Connect MiniZed to your workstation PC
+12. Connect MiniZed to your workstation PC
 
-12. In XSCT, issue
+13. In XSCT, issue
 
 ```shell
-exec program_flash -f BOOT.BIN -bin zynq_fsbl.elf -flash_type qspi_single
+exec program_flash -f boot.bin -fsbl zynq_fsbl.elf -flash_type qspi_single
 ```
 
-You should expect a message saying program flash operation succeeded.
+You should expect a message saying program flash operation succeeded.  Ctrl+Z to exit xsct.
 
 ---
 
@@ -210,10 +242,6 @@ You should expect a message saying program flash operation succeeded.
 
 1. Download minized.bsp 2017.2 from minized.org (under MiniZed->Tutorial).
 
-```shell
-petalinux-create -t project -n minized -s <path-to-the-minized.bsp>
-```
-
 2. Source $(PETALINUX)/settings.sh to start PetaLinux environment if you haven't
 
 ```shell
@@ -224,7 +252,7 @@ source $(PETALINUX)/settings.sh
 
 ```shell
 cd ~/projects
-petalinux-create -t project -n minized_qspi -s <path-to-the-minized.bsp>
+petalinux-create -t project -n minized -s <path-to-the-minized.bsp>
 ```
 
 4. Replace `minized/hardware/MINIZED/minized_petalinux.sdk/minized_petalinux_hw.hdf` with the HDF you have exported in Section I.
@@ -248,8 +276,9 @@ cd ./project-spec/meta-user/recipes-core/images
 
 8. Configure the kernel. Two ways:
 
-    Simply replace `./project-spec/configs/config with petalinux_configs/config` with [/petalinux_configs/configs](/petalinux_configs/configs)
-
+    Simply replace `./project-spec/configs/config` with [/petalinux_configs/configs](/petalinux_configs/config)
+    Open the config file with any text editor.  Search for "PROOT", and navigate to the second instance (CONFIG_TMP_DIR_LOCATION).  Replace ${PROOT} with /home/<user name>/projects/minized
+    
     *OR*
 
     Issue
@@ -289,15 +318,15 @@ cd ./project-spec/meta-user/recipes-core/images
 
 1. Follow the steps in [aes128_driver](https://github.com/happyx94/aes128_driver) to include the necessary applications and modules.
 
-2. Copy `./images/linux/image.up` to your USB stick. Also copy the tool scripts as well as the wifi config files to the usb stick.
+2. Copy `./images/linux/image.ub` to your USB stick. Also copy the tool scripts as well as the wifi config files to the usb stick (Make sure to copy scripts from both this github project, as well as the [aes128_driver project](https://github.com/happyx94/aes128_driver)).  Replace the values of ssid and psk in wpa_supplicant.conf to match with the wifi network you will be connecting to.
 
-3. Boot your minized. Interrupt the autobooting. In uboot shell, type
+3. Boot your minized. Begin a Serial Terminal in PuTTY (Serial Line: /dev/ttyUSB1, Baud Rate: 115200).  Press the RESET pushbutton. Interrupt the autobooting. In uboot shell, type
 
 ```shell
 run boot_qspi
 ```
 
-4. Plug-in an extra power cable and the USB stick. Mount the device to `/mnt/usb` if it is not mounted automatically.
+4. Login with username "root" and password "root".  Plug-in an extra power cable and the USB stick. Mount the device to `/mnt/usb` if it is not mounted automatically.
 
 5. Copy the image, [scripts](/demo_scripts), [config files](/wifi_conf) to the eMMC.
 
@@ -342,13 +371,15 @@ wifi.sh
 8. On the **Client PC**, in the directory where you put the client scripts, issue
 
 ```shell
-./receiver 5000 8192
+chmod +x receiver.sh
+./receiver.sh 5000 key 8192
 ```
 
 9. On the **MiniZed board**, run
 
 ```shell
-/mnt/emmc/easy_demo.sh <your-computers-ip>
+cd /mnt/emmc
+./easy_demo.sh <your-computers-ip>
 ```
 
 10. You should see the video streaming on the client PC now (hopefully).

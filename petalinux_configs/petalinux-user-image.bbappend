@@ -21,8 +21,8 @@ IMAGE_INSTALL_append = " iperf"
 IMAGE_INSTALL_append = " wpa-supplicant"
 
 # brcmfmac Wi-Fi driver firmware and utilities
-IMAGE_INSTALL_append = " minized-wireless"
-IMAGE_INSTALL_append = " minized-wireless-mfgtest"
+IMAGE_INSTALL_append = " minized-firmware"
+IMAGE_INSTALL_append = " minized-firmware-wl"
 IMAGE_INSTALL_append = " iw" 
 
 # Python
